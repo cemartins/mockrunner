@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import com.mockrunner.base.NestedApplicationException;
@@ -656,17 +657,17 @@ public class JDBCTestModule
         verifySQLStatementParameterNumber(sql, indexOfParameterSet, parameterMap.size());
         MockParameterMap actualParameterMap = verifyAndGetParametersForSQL(sql, indexOfParameterSet);
         
-        for(ParameterReference key : parameterMap.keySet()){
-            Object nextExpectedParameter = parameterMap.get(key);
-            Object nextActualParameter = actualParameterMap.get(key);
-            if(null == nextActualParameter)
-            {
-                throw new VerifyFailedException("No parameter " + key + " found.");
-            }
-            if(!ParameterUtil.compareParameter(nextExpectedParameter, nextActualParameter))
-            {
-                throw new VerifyFailedException("Expected " + nextExpectedParameter + " for parameter " + key + ", but was " + nextActualParameter);
-            }
+        for(Entry<ParameterReference, Object> expectedParam : parameterMap.entrySet()){
+          Object nextExpectedParameter = expectedParam.getValue();
+          if(!actualParameterMap.containsKey(expectedParam.getKey()))
+          {
+              throw new VerifyFailedException("No parameter " + expectedParam.getKey() + " found.");
+          }
+          Object nextActualParameter = actualParameterMap.get(expectedParam.getKey());
+          if(!ParameterUtil.compareParameter(nextExpectedParameter, nextActualParameter))
+          {
+                throw new VerifyFailedException("Expected " + nextExpectedParameter + " for parameter " + expectedParam.getKey() + ", but was " + nextActualParameter);
+          }
         }
     }
     
@@ -690,6 +691,10 @@ public class JDBCTestModule
     public void verifySQLStatementParameter(String sql, int indexOfParameterSet, int indexOfParameter, Object expectedParameter)
     {
         MockParameterMap actualParameterMap = verifyAndGetParametersForSQL(sql, indexOfParameterSet);
+        if(!actualParameterMap.contains(indexOfParameter))
+        {
+            throw new VerifyFailedException("No parameter " + indexOfParameter + " found.");
+        }
         Object actualParameter = actualParameterMap.get(indexOfParameter);
         if(!ParameterUtil.compareParameter(expectedParameter, actualParameter))
         {
@@ -717,6 +722,10 @@ public class JDBCTestModule
     public void verifySQLStatementParameter(String sql, int indexOfParameterSet, String nameOfParameter, Object expectedParameter)
     {
         MockParameterMap actualParameterMap = verifyAndGetParametersForSQL(sql, indexOfParameterSet);
+        if(!actualParameterMap.contains(nameOfParameter))
+        {
+            throw new VerifyFailedException("No parameter " + nameOfParameter + " found.");
+        }
         Object actualParameter = actualParameterMap.get(nameOfParameter);
         if(!ParameterUtil.compareParameter(expectedParameter, actualParameter))
         {
